@@ -4,7 +4,6 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 
 import express, { json } from 'express';
-import { tests } from "./testsBD";
 import { users } from './users';
 import { TokenService } from "./token-service";
 import { v4 as getId } from 'uuid';
@@ -34,6 +33,18 @@ interface IBody {
 	password: string,
 }
 
+interface ITest {
+	id: string;
+	nameTest: string;
+	qw: {
+		question: string;
+		answer: string[];
+		correct: string
+	}[];
+}
+
+let tests: ITest[] = [];
+
 app.post('/auth', (request, response) => {
 	users.map(user => {
 		if(user.login ===  request.body.login && user.password === request.body.password) {
@@ -45,7 +56,6 @@ app.post('/auth', (request, response) => {
 			response.send('OK');
 		}
 		else {
-			console.log(request.body)
 			response.send('failed')
 		}
 	})
@@ -80,12 +90,9 @@ app.get('', (response, request) => {
 // });
 
 app.get('/checkedCookie', (request, response) => {
-	console.log(request.cookies)
 	jwt.verify(request.cookies.t, process.env.JWT_ACCESS_SECRET, (err, decode) => {
-		console.log(decode)
 		if (!err) {
 			if (decode.login) {
-				console.log('token is valid')
 				response.send(true);
 			}
 		} else {
@@ -105,15 +112,15 @@ app.get('/deleteCookie', (request, response) => {
 })
 
 app.delete('/deleteTest', (request, response) => {
-
+	tests = tests.filter(el => el.id !== request.query.id)
+	response.send('ok')
 })
 
-app.post('/saveTest', (req, res) => {
-	console.log(req.body);
+app.post('/saveTest', (req, res,next) => {
 	if(req.body.qw){
 		tests.push({ id: getId(), qw: req.body.qw, nameTest: req.body.nameTest  })
 	}
-	res.send({tests});
+	// res.redirect('http://localhost:3000/testListPage');
 })
 
 
